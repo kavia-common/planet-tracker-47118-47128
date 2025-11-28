@@ -16,18 +16,21 @@ npm start
 ### Backend URL configuration
 
 The app will call the backend API using this priority:
-1) REACT_APP_API_BASE_URL from your .env (recommended)
-2) Otherwise, it defaults to the same protocol/hostname as the current page with port 3001 (preview convention).
+1) REACT_APP_API_BASE_URL from your .env (recommended, full URL with scheme, host, port)
+2) Otherwise, it derives `scheme://<current-host>:3001` from browser location.
+   - You can optionally set REACT_APP_API_SCHEME to force `http` or `https` if needed.
 
-Create `.env` from `.env.example` and set:
+Create `.env` from `.env.example` and set (recommended):
 ```
-REACT_APP_API_BASE_URL=https://your-backend-host:3001
+REACT_APP_API_BASE_URL=https://<your-preview-host>:3001
 ```
 
 If you see “Failed to fetch” for NEOs/Planets:
+- Verify the backend binds to 0.0.0.0:3001 (run.py does this by default).
 - Ensure the backend is reachable at port 3001 from your browser.
-- Check that your .env is set correctly and you restarted the dev server.
-- Open the browser devtools Network tab and verify requests target https://<your-host>:3001/api/...
+- Check that your `.env` is set correctly and you restarted the dev server.
+- If frontend is HTTPS and backend is HTTP, browsers block mixed content; use HTTPS on backend or set a secure proxy. Prefer REACT_APP_API_BASE_URL.
+- Open the browser devtools Network tab and verify requests target the correct https://<your-host>:3001/api/... (or as configured).
 
 ### Optional NASA API key
 
