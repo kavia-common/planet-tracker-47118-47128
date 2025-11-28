@@ -1,8 +1,62 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import ImageModal from './ImageModal';
+import { getPlanetImage } from '../services/nasaPlanets';
 
 // PUBLIC_INTERFACE
 export default function PlanetList({ data, loading, error }) {
-  /** Renders Planet positions list panel with loading and error states. */
+  /** Renders Planet positions list panel with loading and error states and planet thumbnails. */
+
+  // Cache images by planet name
+  const [imageMap, setImageMap] = useState({});
+  const [modal, setModal] = useState({ open: false, title: '', imageUrl: '', credit: '', description: '' });
+
+  const planets = useMemo(() => data?.items || [], [data]);
+  const planetNames = useMemo(() => planets.map((p) => p.name), [planets]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchForPlanet(name) {
+      if (!name) return;
+      if (imageMap[name]?.status === 'done' || imageMap[name]?.status === 'loading') return;
+
+      setImageMap((prev) => ({ ...prev, [name]: { status: 'loading' } }));
+
+      const res = await getPlanetImage(name);
+      if (cancelled) return;
+
+      if (res.ok && res.item) {
+        setImageMap((prev) => ({
+          ...prev,
+          [name]: { status: 'done', ...res.item },
+        }));
+      } else {
+        setImageMap((prev) => ({
+          ...prev,
+          [name]: { status: 'error' },
+        }));
+      }
+    }
+
+    for (const name of planetNames) {
+      fetchForPlanet(name);
+    }
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planetNames.length]);
+
+  const openModal = (name) => {
+    const img = imageMap[name];
+    setModal({
+      open: true,
+      title: img?.title || name,
+      imageUrl: img?.imageUrl,
+      credit: img?.credit,
+      description: img?.description,
+    });
+  };
+
   return (
     <div className="panel">
       <div className="panel-header">
@@ -18,22 +72,46 @@ export default function PlanetList({ data, loading, error }) {
         {error && <div className="error">Failed to load planets: {error.message}</div>}
         {!loading && !error && (
           <>
-            {data?.items?.length ? (
+            {planets?.length ? (
               <div className="list" role="list">
                 <div className="list-row" style={{ fontWeight: 700 }}>
+                  <div className="cell-muted">Img</div>
                   <div>Name</div>
                   <div className="cell-muted">RA (h)</div>
                   <div className="cell-muted">Dec (°)</div>
                   <div className="cell-muted">Distance (AU)</div>
                 </div>
-                {data.items.map((p) => (
-                  <div className="list-row" key={p.name} role="listitem">
-                    <div>{p.name}</div>
-                    <div>{Number(p.right_ascension).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                    <div>{Number(p.declination).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                    <div>{Number(p.distance_au).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
-                  </div>
-                ))}
+                {planets.map((p) => {
+                  const img = imageMap[p.name];
+                  return (
+                    <div
+                      className="list-row"
+                      key={p.name}
+                      role="listitem"
+                      onClick={() => openModal(p.name)}
+                      style={{ cursor: 'pointer' }}
+                      title="Click to view image"
+                    >
+                      <div
+                        className="neo-thumb"
+                        onClick={(e) => { e.stopPropagation(); openModal(p.name); }}
+                        aria-label={`Open image of ${p.name}`}
+                      >
+                        {img?.status === 'loading' && <div className="placeholder">…</div>}
+                        {img?.status === 'done' && img?.thumbnailUrl && (
+                          <img src={img.thumbnailUrl} alt={`${p.name} thumbnail`} loading="lazy" />
+                        )}
+                        {(!img || img?.status === 'error') && (
+                          <div className="placeholder">🪐</div>
+                        )}
+                      </div>
+                      <div>{p.name}</div>
+                      <div>{Number(p.right_ascension).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                      <div>{Number(p.declination).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                      <div>{Number(p.distance_au).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="loading">No planet data for selected date.</div>
@@ -41,6 +119,15 @@ export default function PlanetList({ data, loading, error }) {
           </>
         )}
       </div>
+
+      <ImageModal
+        open={modal.open}
+        onClose={() => setModal((m) => ({ ...m, open: false }))}
+        title={modal.title}
+        imageUrl={modal.imageUrl}
+        credit={modal.credit}
+        description={modal.description}
+      />
     </div>
   );
 }
