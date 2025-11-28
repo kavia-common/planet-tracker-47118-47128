@@ -296,3 +296,62 @@ body {
   font-size: 12px;
   color: var(--ocean-muted);
 }
+
+/* Toasts */
+.toast-region {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none; /* allow clicks through gaps */
+}
+
+.toast-region.top-right { top: 14px; right: 14px; align-items: flex-end; }
+.toast-region.top-left { top: 14px; left: 14px; align-items: flex-start; }
+.toast-region.bottom-right { bottom: 14px; right: 14px; align-items: flex-end; }
+.toast-region.bottom-left { bottom: 14px; left: 14px; align-items: flex-start; }
+
+.toast {
+  pointer-events: auto;
+  min-width: 220px;
+  max-width: min(92vw, 380px);
+  border-radius: 12px;
+  border: 1px solid var(--ocean-border);
+  box-shadow: var(--shadow);
+  background: var(--ocean-surface);
+  color: var(--ocean-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.toast .toast-message {
+  flex: 1;
+  font-size: 14px;
+}
+
+.toast .toast-close {
+  border: 1px solid var(--ocean-border);
+  background: var(--ocean-surface);
+  color: var(--ocean-text);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.toast.success {
+  border-color: color-mix(in oklab, var(--ocean-secondary) 50%, var(--ocean-border));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ocean-secondary) 10%, var(--ocean-surface)), var(--ocean-surface));
+}
+
+.toast.info {
+  border-color: color-mix(in oklab, var(--ocean-primary) 40%, var(--ocean-border));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ocean-primary) 8%, var(--ocean-surface)), var(--ocean-surface));
+}
+
+.toast.error, .toast.warning {
+  border-color: color-mix(in oklab, var(--ocean-error) 50%, var(--ocean-border));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ocean-error) 10%, var(--ocean-surface)), var(--ocean-surface));
+}

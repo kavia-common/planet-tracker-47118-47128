@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ImageModal from './ImageModal';
 import { getPlanetImage } from '../services/nasaPlanets';
+import { useNotify } from './NotificationProvider';
 
 // PUBLIC_INTERFACE
 export default function PlanetList({ data, loading, error, onRefresh, refreshing }) {
@@ -9,6 +10,7 @@ export default function PlanetList({ data, loading, error, onRefresh, refreshing
   // Cache images by planet name
   const [imageMap, setImageMap] = useState({});
   const [modal, setModal] = useState({ open: false, title: '', imageUrl: '', credit: '', description: '' });
+  const notify = useNotify();
 
   const planets = useMemo(() => data?.items || [], [data]);
   const planetNames = useMemo(() => planets.map((p) => p.name), [planets]);
@@ -35,11 +37,15 @@ export default function PlanetList({ data, loading, error, onRefresh, refreshing
           ...prev,
           [name]: { status: 'done', ...res.item },
         }));
+        if ((res.item.credit || '').includes('APOD') || (res.item.description || '').includes('Generic')) {
+          notify.info(`Using a generic image for ${name}.`);
+        }
       } else {
         setImageMap((prev) => ({
           ...prev,
           [name]: { status: 'error' },
         }));
+        notify.warning?.(`No image available for ${name}.`);
       }
     }
 

@@ -4,6 +4,7 @@ import PlanetList from '../components/PlanetList';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { fetchNeos, fetchPlanets } from '../services/api';
+import { useNotify } from '../components/NotificationProvider';
 
 // PUBLIC_INTERFACE
 export default function Home() {
@@ -11,6 +12,7 @@ export default function Home() {
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [theme, setTheme] = useState('light');
   const [date, setDate] = useState(todayIso);
+  const notify = useNotify();
 
   // NEO state
   const [neos, setNeos] = useState(null);
@@ -40,6 +42,7 @@ export default function Home() {
       setNeos(data);
     } catch (e) {
       setNeosError(e);
+      notify.error(`Failed to load NEOs: ${e.message}`);
     } finally {
       setNeosLoading(false);
     }
@@ -53,6 +56,7 @@ export default function Home() {
       setPlanets(data);
     } catch (e) {
       setPlanetsError(e);
+      notify.error(`Failed to load planets: ${e.message}`);
     } finally {
       setPlanetsLoading(false);
     }
@@ -77,12 +81,16 @@ export default function Home() {
     if (refreshLockRef.current || neosLoading || planetsLoading) return;
     refreshLockRef.current = true;
     // invoke loads; they handle their own loading/error states reused by UI
-    Promise.all([loadNeos(date), loadPlanets(date)]).finally(() => {
-      // light debounce of ~500ms to avoid rapid spamming
-      headerRefreshTimer.current = setTimeout(() => {
-        refreshLockRef.current = false;
-      }, 500);
-    });
+    Promise.all([loadNeos(date), loadPlanets(date)])
+      .then(() => {
+        notify.success('Data refreshed');
+      })
+      .finally(() => {
+        // light debounce of ~500ms to avoid rapid spamming
+        headerRefreshTimer.current = setTimeout(() => {
+          refreshLockRef.current = false;
+        }, 500);
+      });
   };
 
   useEffect(() => {

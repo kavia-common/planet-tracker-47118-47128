@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getNeoImage } from '../services/nasaImages';
 import ImageModal from './ImageModal';
+import { useNotify } from './NotificationProvider';
 
 // PUBLIC_INTERFACE
 export default function NeoList({ data, loading, error, onRefresh, refreshing }) {
@@ -9,6 +10,7 @@ export default function NeoList({ data, loading, error, onRefresh, refreshing })
   // Local cache of images keyed by NEO id to avoid refetching on re-renders.
   const [imageMap, setImageMap] = useState({});
   const [modal, setModal] = useState({ open: false, title: '', imageUrl: '', credit: '', description: '' });
+  const notify = useNotify();
 
   // Search state with debounce
   const [search, setSearch] = useState('');
@@ -55,11 +57,16 @@ export default function NeoList({ data, loading, error, onRefresh, refreshing })
           ...prev,
           [id]: { status: 'done', ...res.item }
         }));
+        // If the returned item looks like a generic placeholder, surface a subtle info/warning once.
+        if (res.item?.credit === 'NASA' || (res.item?.description || '').includes('Generic')) {
+          notify.info(`Showing a generic image for "${name}". Add a NASA API key for richer imagery.`);
+        }
       } else {
         setImageMap((prev) => ({
           ...prev,
           [id]: { status: 'error' }
         }));
+        notify.warning?.(`No image found for "${name}".`);
       }
     }
 
