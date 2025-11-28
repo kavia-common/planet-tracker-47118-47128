@@ -150,6 +150,14 @@ body {
   border-bottom: 1px solid var(--ocean-border);
 }
 
+/* Search tweaks inside panel header */
+.panel-header [role="search"] .input[type="search"] {
+  padding-right: 34px;
+}
+.panel-header [role="search"] .btn {
+  padding: 8px 10px;
+}
+
 .panel-title {
   font-size: 16px;
   font-weight: 700;
