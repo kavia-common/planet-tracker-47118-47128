@@ -20,29 +20,32 @@
  */
 export const API_BASE_URL = (() => {
   try {
+    // Highest priority: build-time env
     const envUrl = process.env.REACT_APP_API_BASE_URL;
-    if (envUrl) return stripTrailingSlash(envUrl);
+    if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
+      return stripTrailingSlash(envUrl.trim());
+    }
 
     if (typeof window !== 'undefined') {
-      // Optional runtime override hook (can be injected by container/proxy)
+      // Next priority: runtime global variable (proxy/container injection)
       const runtime = window.__PLANET_TRACKER_API_BASE_URL__;
-      if (runtime && typeof runtime === 'string') {
-        return stripTrailingSlash(runtime);
+      if (runtime && typeof runtime === 'string' && runtime.trim()) {
+        return stripTrailingSlash(runtime.trim());
       }
 
-      // Optional meta tag override (alternative runtime injection)
+      // Next: meta tag injection
       const meta = document?.querySelector?.('meta[name="planet-tracker-api-base"]');
       const metaUrl = meta?.getAttribute?.('content');
-      if (metaUrl) {
-        return stripTrailingSlash(metaUrl);
+      if (metaUrl && metaUrl.trim()) {
+        return stripTrailingSlash(metaUrl.trim());
       }
 
+      // Fallbacks based on origin
       if (window.location && window.location.origin) {
         const origin = window.location.origin;
         if (origin.includes(':3000')) {
           return stripTrailingSlash(origin.replace(':3000', ':3001'));
         }
-        // Same-origin (useful when a reverse proxy fronts both apps)
         return stripTrailingSlash(origin);
       }
     }
@@ -52,6 +55,13 @@ export const API_BASE_URL = (() => {
   // Final fallback: relative root
   return '';
 })();
+
+// Dev-mode console hint for resolved API base URL
+if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
+  // Only log once on module load for clarity
+  // eslint-disable-next-line no-console
+  console.log('[Planet Tracker] API base URL:', API_BASE_URL || '(relative root)');
+}
 
 /** Remove trailing slash for consistent URL join */
 function stripTrailingSlash(u) {

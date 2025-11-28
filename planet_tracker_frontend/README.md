@@ -15,14 +15,21 @@ npm start
 
 ## Backend API base URL
 
-The app determines the backend URL in this order:
+The app determines the backend URL in this order (highest to lowest):
 1. REACT_APP_API_BASE_URL (build-time `.env`)
 2. window.__PLANET_TRACKER_API_BASE_URL__ (runtime injection by proxy/container)
 3. <meta name="planet-tracker-api-base" content="https://..."> (runtime injection)
 4. window.location.origin with port swap :3000 -> :3001 (workspace preview)
 5. window.location.origin (same-origin reverse proxy)
 
-Example `.env`:
+Preview setup:
+- Create a `.env` file in this folder with:
+```
+REACT_APP_API_BASE_URL=https://vscode-internal-12395-qa.qa01.cloud.kavia.ai:3001
+```
+- Restart `npm start` after changing `.env` so the new value is picked up.
+
+Example alternative `.env`:
 ```
 REACT_APP_API_BASE_URL=https://your-backend-host:3001
 ```
@@ -33,6 +40,10 @@ Alternatively you can inject a meta tag into index.html at runtime:
 ```
 
 If using a reverse proxy that serves both apps on the same origin, you can omit the env var/meta.
+
+Debugging:
+- In development mode, the app logs the resolved API base URL once in the console as:
+  `[Planet Tracker] API base URL: <value>`
 
 ## Troubleshooting “Failed to fetch”
 
