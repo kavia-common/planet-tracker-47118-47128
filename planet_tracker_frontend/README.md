@@ -18,15 +18,21 @@ npm start
 The app determines the backend URL in this order:
 1. REACT_APP_API_BASE_URL (build-time `.env`)
 2. window.__PLANET_TRACKER_API_BASE_URL__ (runtime injection by proxy/container)
-3. window.location.origin with port swap :3000 -> :3001 (workspace preview)
-4. window.location.origin (same-origin reverse proxy)
+3. <meta name="planet-tracker-api-base" content="https://..."> (runtime injection)
+4. window.location.origin with port swap :3000 -> :3001 (workspace preview)
+5. window.location.origin (same-origin reverse proxy)
 
 Example `.env`:
 ```
 REACT_APP_API_BASE_URL=https://your-backend-host:3001
 ```
 
-If using a reverse proxy that serves both apps on the same origin, you can omit the env var.
+Alternatively you can inject a meta tag into index.html at runtime:
+```
+<meta name="planet-tracker-api-base" content="https://your-backend-host:3001" />
+```
+
+If using a reverse proxy that serves both apps on the same origin, you can omit the env var/meta.
 
 ## Troubleshooting “Failed to fetch”
 

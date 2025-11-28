@@ -1,5 +1,6 @@
 //
 //
+//
 // API service for Planet Tracker frontend
 //
 // Provides typed fetchers for backend endpoints with a single base URL and
@@ -13,8 +14,9 @@
  * Compute the backend base URL using the following precedence:
  * 1) REACT_APP_API_BASE_URL (build-time)
  * 2) window.__PLANET_TRACKER_API_BASE_URL__ (runtime override, if a reverse proxy injects it)
- * 3) window.location.origin with :3000 -> :3001 swap (workspace preview convention)
- * 4) window.location.origin (same-origin reverse proxy)
+ * 3) <meta name="planet-tracker-api-base" content="https://..."> (runtime injection)
+ * 4) window.location.origin with :3000 -> :3001 swap (workspace preview convention)
+ * 5) window.location.origin (same-origin reverse proxy)
  */
 export const API_BASE_URL = (() => {
   try {
@@ -26,6 +28,13 @@ export const API_BASE_URL = (() => {
       const runtime = window.__PLANET_TRACKER_API_BASE_URL__;
       if (runtime && typeof runtime === 'string') {
         return stripTrailingSlash(runtime);
+      }
+
+      // Optional meta tag override (alternative runtime injection)
+      const meta = document?.querySelector?.('meta[name="planet-tracker-api-base"]');
+      const metaUrl = meta?.getAttribute?.('content');
+      if (metaUrl) {
+        return stripTrailingSlash(metaUrl);
       }
 
       if (window.location && window.location.origin) {
@@ -50,11 +59,17 @@ function stripTrailingSlash(u) {
   return u.endsWith('/') ? u.slice(0, -1) : u;
 }
 
+/** True if the string looks like an absolute URL */
+function isAbsolute(u) {
+  return typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://'));
+}
+
 /** Join base and path safely */
 function joinUrl(base, path) {
   if (!base) return path; // allow relative requests in proxy setups
   if (!path) return base;
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (isAbsolute(path)) return path;
+  // If base is absolute, just concatenate; avoid mixing with window.origin elsewhere.
   return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
@@ -78,7 +93,8 @@ export async function apiGet(path, params = {}) {
    * Perform GET request with query params and JSON response parsing.
    * Adds a lightweight health-check retry if initial request fails due to network/CORS.
    */
-  const urlObj = new URL(joinUrl(API_BASE_URL, path), window.location?.origin);
+  const targetUrl = joinUrl(API_BASE_URL, path);
+  const urlObj = new URL(targetUrl, isAbsolute(targetUrl) ? undefined : window.location?.origin);
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') urlObj.searchParams.append(k, v);
   });
