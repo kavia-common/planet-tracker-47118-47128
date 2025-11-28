@@ -20,8 +20,16 @@ REACT_APP_API_BASE_URL=https://your-backend-host:3001
 ```
 If not set, it defaults to the preview URL used in this workspace.
 
+Optional NASA API key:
+To improve image fallbacks (APOD) for NEO thumbnails, you may set:
+```
+REACT_APP_NASA_API_KEY=your_nasa_api_key_here
+```
+NASA Images search endpoint does not require a key, but APOD fallback does. If not provided, a generic NASA image will be used as a fallback.
+
 ## Features
 - Ocean Professional theme with subtle gradients and shadows
 - Date selector to query data
 - Loading and error states
 - Panels for NEOs and Planet positions
+- NEO thumbnails with click-to-enlarge modal and graceful fallbacks
