@@ -199,6 +199,34 @@ body {
   background: color-mix(in oklab, var(--ocean-surface) 86%, transparent);
 }
 
+/* Filter toolbar */
+.filter-toolbar {
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px dashed color-mix(in oklab, var(--ocean-primary) 30%, var(--ocean-border));
+  border-radius: 10px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ocean-primary) 6%, var(--ocean-surface)), var(--ocean-surface));
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chip {
+  border: 1px solid var(--ocean-border);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ocean-secondary) 12%, var(--ocean-surface)), var(--ocean-surface));
+  color: var(--ocean-text);
+  padding: 6px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.chip:hover {
+  border-color: color-mix(in oklab, var(--ocean-secondary) 40%, var(--ocean-border));
+}
+
 /* Utility */
 .row { display: flex; gap: 8px; align-items: center; }
 .spacer { flex: 1; }
