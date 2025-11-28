@@ -1,8 +1,8 @@
 import React from 'react';
 
 // PUBLIC_INTERFACE
-export default function Header({ date, onDateChange, theme, onToggleTheme }) {
-  /** Header with brand, date control, and theme toggle. */
+export default function Header({ date, onDateChange, theme, onToggleTheme, onRefresh, refreshing }) {
+  /** Header with brand, date control, refresh, and theme toggle. */
   return (
     <header className="header" role="banner">
       <div className="header-inner">
@@ -22,6 +22,17 @@ export default function Header({ date, onDateChange, theme, onToggleTheme }) {
             value={date}
             onChange={(e) => onDateChange?.(e.target.value)}
           />
+          <button
+            className="btn primary"
+            onClick={() => onRefresh?.()}
+            disabled={!!refreshing}
+            aria-busy={!!refreshing}
+            aria-label="Refresh latest data"
+            title="Refresh data"
+            style={{ padding: '8px 12px' }}
+          >
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
           <button
             className="btn secondary"
             onClick={() => onToggleTheme?.()}

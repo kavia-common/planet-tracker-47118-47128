@@ -3,7 +3,7 @@ import { getNeoImage } from '../services/nasaImages';
 import ImageModal from './ImageModal';
 
 // PUBLIC_INTERFACE
-export default function NeoList({ data, loading, error }) {
+export default function NeoList({ data, loading, error, onRefresh, refreshing }) {
   /** Renders NEO list panel with loading and error states and image thumbnails. */
 
   // Local cache of images keyed by NEO id to avoid refetching on re-renders.
@@ -25,6 +25,11 @@ export default function NeoList({ data, loading, error }) {
   const neoKeys = useMemo(() => {
     return neoList.map((item) => ({ id: item.id, name: item.name }));
   }, [neoList]);
+
+  // Reset image cache when the incoming dataset changes (to re-hydrate thumbnails on refresh/date change)
+  useEffect(() => {
+    setImageMap({});
+  }, [neoKeys.length]);
 
   // Client-side filter by name/designation (case-insensitive, substring)
   const filteredNeos = useMemo(() => {
@@ -67,7 +72,7 @@ export default function NeoList({ data, loading, error }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [neoKeys.length]); // re-run if the number of items changes
+  }, [neoKeys.length, imageMap]);
 
   const openModal = (id, fallbackTitle) => {
     const img = imageMap[id];
@@ -115,8 +120,22 @@ export default function NeoList({ data, loading, error }) {
             )}
           </div>
         </div>
-        <div className="panel-subtitle">
-          {data?.pagination ? `Page ${data.pagination.page} • ${data.pagination.total} total` : ''}
+        <div className="row" style={{ gap: 8 }}>
+          <div className="panel-subtitle">
+            {data?.pagination ? `Page ${data.pagination.page} • ${data.pagination.total} total` : ''}
+          </div>
+          <div className="spacer" />
+          <button
+            className="btn primary"
+            onClick={() => onRefresh?.()}
+            disabled={!!refreshing}
+            aria-busy={!!refreshing}
+            aria-label="Refresh NEOs"
+            title="Refresh NEOs"
+            style={{ padding: '6px 10px' }}
+          >
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
       </div>
       <div className="panel-body">

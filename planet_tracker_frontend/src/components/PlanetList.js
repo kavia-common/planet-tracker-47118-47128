@@ -3,7 +3,7 @@ import ImageModal from './ImageModal';
 import { getPlanetImage } from '../services/nasaPlanets';
 
 // PUBLIC_INTERFACE
-export default function PlanetList({ data, loading, error }) {
+export default function PlanetList({ data, loading, error, onRefresh, refreshing }) {
   /** Renders Planet positions list panel with loading and error states and planet thumbnails. */
 
   // Cache images by planet name
@@ -12,6 +12,11 @@ export default function PlanetList({ data, loading, error }) {
 
   const planets = useMemo(() => data?.items || [], [data]);
   const planetNames = useMemo(() => planets.map((p) => p.name), [planets]);
+
+  // Reset images when data set changes (refresh/date change)
+  useEffect(() => {
+    setImageMap({});
+  }, [planetNames.length]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +49,7 @@ export default function PlanetList({ data, loading, error }) {
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planetNames.length]);
+  }, [planetNames.length, imageMap]);
 
   const openModal = (name) => {
     const img = imageMap[name];
@@ -63,8 +68,22 @@ export default function PlanetList({ data, loading, error }) {
         <div className="row">
           <div className="panel-title">Planetary Positions</div>
         </div>
-        <div className="panel-subtitle">
-          {data?.items?.length ? `${data.items.length} bodies` : ''}
+        <div className="row" style={{ gap: 8 }}>
+          <div className="panel-subtitle">
+            {data?.items?.length ? `${data.items.length} bodies` : ''}
+          </div>
+          <div className="spacer" />
+          <button
+            className="btn primary"
+            onClick={() => onRefresh?.()}
+            disabled={!!refreshing}
+            aria-busy={!!refreshing}
+            aria-label="Refresh planets"
+            title="Refresh planets"
+            style={{ padding: '6px 10px' }}
+          >
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
       </div>
       <div className="panel-body">
