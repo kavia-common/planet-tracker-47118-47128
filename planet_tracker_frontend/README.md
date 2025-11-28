@@ -25,6 +25,12 @@ Create `.env` from `.env.example` and set (recommended):
 REACT_APP_API_BASE_URL=https://<your-preview-host>:3001
 ```
 
+For this workspace preview, the backend is exposed at:
+```
+REACT_APP_API_BASE_URL=https://vscode-internal-32328-qa.qa01.cloud.kavia.ai:3001
+```
+After updating `.env`, restart the dev server so the build-time var is applied.
+
 Notes:
 - The frontend logs the computed API base URL to the browser console once at startup.
 - It also performs a lightweight `/api/health` probe and logs the result to help diagnose configuration/CORS issues.

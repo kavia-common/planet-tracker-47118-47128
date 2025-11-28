@@ -15,6 +15,7 @@
  * - Otherwise, construct a backend URL at the same hostname on port 3001,
  *   using either the current protocol or REACT_APP_API_SCHEME override.
  * - This avoids accidentally calling the frontend origin (/api routes do not exist there).
+ * - In HTTPS previews, ensure the base uses https://...:3001 to avoid mixed content.
  */
 export const API_BASE_URL = (() => {
   // Helper to strip trailing slashes
