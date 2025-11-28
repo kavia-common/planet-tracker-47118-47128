@@ -21,21 +21,39 @@ export const API_BASE_URL = (() => {
   // Helper to strip trailing slashes
   const stripTrailingSlash = (u) => (u || "").replace(/\/*$/, "");
 
+  // 0) Prefer runtime config injected into window.__APP_CONFIG__ (no rebuild required)
+  if (typeof window !== "undefined" && window.__APP_CONFIG__) {
+    const cfg = window.__APP_CONFIG__ || {};
+    const runtimeUrl = cfg.API_BASE_URL || cfg.REACT_APP_API_BASE_URL;
+    if (runtimeUrl) {
+      try {
+        const parsed = new URL(runtimeUrl);
+        const computed = stripTrailingSlash(parsed.origin + parsed.pathname.replace(/\/*$/, ""));
+        // eslint-disable-next-line no-console
+        console.info("[PlanetTracker] Using runtime config API_BASE_URL:", computed);
+        return computed;
+      } catch {
+        const computed = stripTrailingSlash(runtimeUrl);
+        // eslint-disable-next-line no-console
+        console.info("[PlanetTracker] Using runtime config API_BASE_URL (raw):", computed);
+        return computed;
+      }
+    }
+  }
+
   // 1) Prefer explicit env var if present (full URL or origin)
   const envUrl = process.env.REACT_APP_API_BASE_URL;
   if (envUrl) {
     try {
       const parsed = new URL(envUrl);
-      const computed = stripTrailingSlash(
-        parsed.origin + parsed.pathname.replace(/\/*$/, "")
-      );
+      const computed = stripTrailingSlash(parsed.origin + parsed.pathname.replace(/\/*$/, ""));
       if (typeof window !== "undefined") {
         // eslint-disable-next-line no-console
         console.info("[PlanetTracker] Using REACT_APP_API_BASE_URL:", computed);
       }
       return computed;
     } catch {
-      // If it's not a full URL, assume it's a base like https://host:port or http://host:port
+      // If it's not a full URL, assume it is a base like https://host:port or http://host:port
       const computed = stripTrailingSlash(envUrl);
       if (typeof window !== "undefined") {
         // eslint-disable-next-line no-console
@@ -45,9 +63,11 @@ export const API_BASE_URL = (() => {
     }
   }
 
-  // Optional scheme override for preview where backend might be plain HTTP while frontend is HTTPS.
-  // Note: Browsers generally block mixed-content (https page -> http API). Prefer setting REACT_APP_API_BASE_URL.
-  const schemeOverride = (process.env.REACT_APP_API_SCHEME || "").toLowerCase(); // 'http' | 'https' | ''
+  // Optional scheme override (runtime config has priority)
+  let schemeOverride = (process.env.REACT_APP_API_SCHEME || "").toLowerCase();
+  if (typeof window !== "undefined" && window.__APP_CONFIG__ && window.__APP_CONFIG__.API_SCHEME) {
+    schemeOverride = (window.__APP_CONFIG__.API_SCHEME || schemeOverride || "").toLowerCase();
+  }
 
   // 2) Derive from browser location when available
   if (typeof window !== "undefined" && window.location) {
@@ -74,7 +94,7 @@ export const API_BASE_URL = (() => {
   // 3) Final fallback for non-browser contexts - empty forces relative (likely to fail).
   if (typeof window !== "undefined") {
     // eslint-disable-next-line no-console
-    console.warn("[PlanetTracker] API base URL is empty — requests may fail. Set REACT_APP_API_BASE_URL.");
+    console.warn("[PlanetTracker] API base URL is empty — requests may fail. Set runtime config or REACT_APP_API_BASE_URL.");
   }
   return "";
 })();

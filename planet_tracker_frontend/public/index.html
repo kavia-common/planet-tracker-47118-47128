@@ -32,6 +32,38 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- Runtime configuration bootstrap: loads public/config.json (optional) and exposes window.__APP_CONFIG__ -->
+    <script>
+      (function () {
+        // If already defined (e.g., by another script), respect existing config
+        if (window.__APP_CONFIG__) return;
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', (window.PUBLIC_URL || '') + '/config.json', false); // sync load before app mounts
+          xhr.send(null);
+          if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+            try {
+              var parsed = JSON.parse(xhr.responseText);
+              window.__APP_CONFIG__ = parsed || {};
+              // eslint-disable-next-line no-console
+              console.info('[PlanetTracker] Loaded runtime config.json');
+            } catch (e) {
+              window.__APP_CONFIG__ = {};
+              // eslint-disable-next-line no-console
+              console.warn('[PlanetTracker] Failed to parse config.json:', e && e.message);
+            }
+          } else {
+            window.__APP_CONFIG__ = {};
+          }
+        } catch (e) {
+          window.__APP_CONFIG__ = {};
+          // eslint-disable-next-line no-console
+          console.info('[PlanetTracker] No runtime config.json found; using build-time env and defaults.');
+        }
+      })();
+    </script>
+
     <div id="root"></div>
     <!--
       This HTML file is a template.

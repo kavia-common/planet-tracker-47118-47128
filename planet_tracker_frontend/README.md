@@ -16,9 +16,10 @@ npm start
 ### Backend URL configuration
 
 The app will call the backend API using this priority:
-1) REACT_APP_API_BASE_URL from your .env (recommended, full URL with scheme, host, port)
-2) Otherwise, it derives `scheme://<current-host>:3001` from browser location.
-   - You can optionally set REACT_APP_API_SCHEME to force `http` or `https` if needed.
+1) Runtime config from public/config.json (window.__APP_CONFIG__.API_BASE_URL) — no rebuild needed
+2) REACT_APP_API_BASE_URL from your .env at build time (full URL with scheme, host, port)
+3) Otherwise, it derives `scheme://<current-host>:3001` from browser location.
+   - You can optionally set runtime `API_SCHEME` in config.json or `REACT_APP_API_SCHEME` env to force `http` or `https` if needed.
 
 Create `.env` from `.env.example` and set (recommended):
 ```
@@ -30,6 +31,15 @@ For this workspace preview, the backend is exposed at:
 REACT_APP_API_BASE_URL=https://vscode-internal-32328-qa.qa01.cloud.kavia.ai:3001
 ```
 After updating `.env`, restart the dev server so the build-time var is applied.
+
+Runtime configuration (preferred for preview):
+- You can set the API base URL at runtime without rebuilding by editing `public/config.json`:
+  {
+    "API_BASE_URL": "https://<your-preview-host>:3001",
+    "API_SCHEME": "https"
+  }
+- This file is loaded before the React app mounts and overrides the build-time env.
+- The app logs which source it used for configuration in the browser console.
 
 Notes:
 - The frontend logs the computed API base URL to the browser console once at startup.
