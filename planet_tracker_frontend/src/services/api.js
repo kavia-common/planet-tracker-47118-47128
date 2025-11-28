@@ -18,19 +18,29 @@
  */
 export const API_BASE_URL = (() => {
   // Helper to strip trailing slashes
-  const stripTrailingSlash = (u) => (u || "").replace(/\/+$/, "");
+  const stripTrailingSlash = (u) => (u || "").replace(/\/*$/, "");
 
   // 1) Prefer explicit env var if present (full URL or origin)
   const envUrl = process.env.REACT_APP_API_BASE_URL;
   if (envUrl) {
     try {
       const parsed = new URL(envUrl);
-      return stripTrailingSlash(
-        parsed.origin + parsed.pathname.replace(/\/+$/, "")
+      const computed = stripTrailingSlash(
+        parsed.origin + parsed.pathname.replace(/\/*$/, "")
       );
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line no-console
+        console.info("[PlanetTracker] Using REACT_APP_API_BASE_URL:", computed);
+      }
+      return computed;
     } catch {
       // If it's not a full URL, assume it's a base like https://host:port or http://host:port
-      return stripTrailingSlash(envUrl);
+      const computed = stripTrailingSlash(envUrl);
+      if (typeof window !== "undefined") {
+        // eslint-disable-next-line no-console
+        console.info("[PlanetTracker] Using REACT_APP_API_BASE_URL (raw):", computed);
+      }
+      return computed;
     }
   }
 
@@ -51,13 +61,20 @@ export const API_BASE_URL = (() => {
 
       // Assemble URL to port 3001 for backend
       const url = `${scheme}://${hostname}:3001`;
-      return stripTrailingSlash(url);
+      const computed = stripTrailingSlash(url);
+      // eslint-disable-next-line no-console
+      console.info("[PlanetTracker] Derived API base URL:", computed);
+      return computed;
     } catch {
       // fall through
     }
   }
 
   // 3) Final fallback for non-browser contexts - empty forces relative (likely to fail).
+  if (typeof window !== "undefined") {
+    // eslint-disable-next-line no-console
+    console.warn("[PlanetTracker] API base URL is empty — requests may fail. Set REACT_APP_API_BASE_URL.");
+  }
   return "";
 })();
 
@@ -65,10 +82,32 @@ export const API_BASE_URL = (() => {
  * Join a base URL and path safely without duplicating or missing slashes.
  */
 function joinUrl(base, path) {
-  const b = (base || "").replace(/\/+$/, "");
-  const p = (path || "").replace(/^\/+/, "");
+  const b = (base || "").replace(/\/*$/, "");
+  const p = (path || "").replace(/^\/*/, "");
   if (!b) return `/${p}`;
   return `${b}/${p}`;
+}
+
+/**
+ * Perform a quick health probe to help surface base URL/CORS issues early in preview.
+ * Logs result to the console; does not throw.
+ */
+async function probeHealthOnce() {
+  try {
+    const url = joinUrl(API_BASE_URL, "/api/health");
+    if (!url) return;
+    const res = await fetch(url, { headers: { Accept: "application/json" }, mode: "cors" });
+    // eslint-disable-next-line no-console
+    console.info("[PlanetTracker] Health probe:", url, res.ok ? "OK" : `FAIL ${res.status}`);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("[PlanetTracker] Health probe failed:", e?.message);
+  }
+}
+
+// Fire-and-forget probe on module init in browsers
+if (typeof window !== "undefined") {
+  setTimeout(() => { probeHealthOnce(); }, 50);
 }
 
 // PUBLIC_INTERFACE

@@ -25,12 +25,16 @@ Create `.env` from `.env.example` and set (recommended):
 REACT_APP_API_BASE_URL=https://<your-preview-host>:3001
 ```
 
+Notes:
+- The frontend logs the computed API base URL to the browser console once at startup.
+- It also performs a lightweight `/api/health` probe and logs the result to help diagnose configuration/CORS issues.
+
 If you see “Failed to fetch” for NEOs/Planets:
 - Verify the backend binds to 0.0.0.0:3001 (run.py does this by default).
-- Ensure the backend is reachable at port 3001 from your browser.
+- Ensure the backend is reachable at port 3001 from your browser over HTTPS if your frontend is served over HTTPS (to avoid mixed content).
 - Check that your `.env` is set correctly and you restarted the dev server.
-- If frontend is HTTPS and backend is HTTP, browsers block mixed content; use HTTPS on backend or set a secure proxy. Prefer REACT_APP_API_BASE_URL.
-- Open the browser devtools Network tab and verify requests target the correct https://<your-host>:3001/api/... (or as configured).
+- Prefer setting REACT_APP_API_BASE_URL explicitly to the HTTPS backend origin.
+- Open the browser devtools Network tab and verify requests target the correct `https://<your-host>:3001/api/...` (or as configured).
 
 ### Optional NASA API key
 
