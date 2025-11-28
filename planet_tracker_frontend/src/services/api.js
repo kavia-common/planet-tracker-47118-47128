@@ -5,8 +5,32 @@
 // standardized error handling.
 //
 
+/**
+ * Environment-driven configuration to avoid host mismatches:
+ * - Prefer REACT_APP_API_BASE_URL when provided via .env at build time.
+ * - Otherwise, derive from window.location.origin by swapping :3000 -> :3001
+ *   which matches our preview convention (frontend 3000, backend 3001).
+ * - Fallback to window.location.origin for reverse-proxy scenarios.
+ */
 // PUBLIC_INTERFACE
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://vscode-internal-21337-qa.qa01.cloud.kavia.ai:3001';
+export const API_BASE_URL = (() => {
+  // Prefer explicit env var if present
+  const envUrl = process.env.REACT_APP_API_BASE_URL;
+  if (envUrl) return envUrl;
+
+  // Derive from browser location when available
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    const origin = window.location.origin;
+    // Replace :3000 with :3001 when present; otherwise just use origin.
+    if (origin.includes(':3000')) {
+      return origin.replace(':3000', ':3001');
+    }
+    return origin;
+  }
+
+  // Final fallback for non-browser contexts
+  return '';
+})();
 
 // PUBLIC_INTERFACE
 export async function apiGet(path, params = {}) {
